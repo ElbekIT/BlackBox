@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="amoled_black">#000000</color>
+    <color name="cyber_green">#00FF66</color>
+    <color name="neon_blue">#00E5FF</color>
+    <color name="cyber_red">#FF0055</color>
+    <color name="cyber_dark_surface">#0D1117</color>
+    <color name="cyber_card">#161B22</color>
+    <color name="cyber_border">#00FF66</color>
+    <color name="cyber_text_primary">#E6EDF3</color>
+    <color name="cyber_text_secondary">#8B949E</color>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BlackBox</string>
+    <string name="brand_name">Elbek Web</string>
+    <string name="calculator_disguise_name">Kalkulyator</string>
+    <string name="accessibility_service_description">BlackBox 0-ms Zero-Delay AppLock va xavfsizlik nazoratchisi. Qulflangan ilovalar ochilganda darhol himoya oynasini koʻrsatadi.</string>
+    <string name="device_admin_description">BlackBox oʻchirishga qarshi himoya va oʻgʻrilikka qarshi xavfsizlik moduli.</string>
+    <string name="app_locked_title">XAVFSIZLIK QULF TIZIMI</string>
+    <string name="enter_pin_hint">PIN-kodni kiriting</string>
+    <string name="fake_crash_message">Afsuski, dastur toʻxtatildi.</string>
+</resources>
