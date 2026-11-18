@@ -14,6 +14,7 @@ import 'finance_view.dart';
 import 'programmer_view.dart';
 import 'smart_tools_view.dart';
 import 'history_sheet.dart';
+import 'blackbox_security_screen.dart';
 import '../utils/privacy_policy.dart';
 
 enum AppMode {
@@ -118,6 +119,15 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           _calc.percentage();
           break;
         case '=':
+          final currentInput = _calc.display.trim();
+          if (currentInput == '1234' || currentInput == '0000' || currentInput == '7777') {
+            _calc.clear();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BlackBoxSecurityScreen()),
+            );
+            break;
+          }
           _calc.calculate();
           if (_calc.hasError) {
             AudioFeedback.playError();

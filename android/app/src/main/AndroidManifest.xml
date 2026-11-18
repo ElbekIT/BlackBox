@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="uz.elbekweb.blackbox">
+    package="com.algorix.app">
 
     <!-- ======================================================== -->
     <!-- ZERO INTERNET GUARANTEE: android.permission.INTERNET IS  -->
@@ -56,7 +56,7 @@
         android:resizeable="true" />
 
     <application
-        android:name=".BlackBoxApp"
+        android:name="uz.elbekweb.blackbox.BlackBoxApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -67,13 +67,18 @@
         android:requestLegacyExternalStorage="true"
         tools:targetApi="34">
 
-        <!-- ASOSIY EKRAN: BlackBox Dashboard & Wizard -->
+        <!-- ASOSIY EKRAN: FlutterActivity v2 Embedding -->
         <activity
-            android:name=".presentation.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|density|uiMode">
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -81,23 +86,27 @@
         </activity>
 
         <!-- STEALTH NIQOB: Kalkulyator Disguise Activity Alias -->
-        <!-- Foydalanuvchi sozlamalarda "Kalkulyator" rejimini yoqqanda bu alias faollashadi -->
         <activity-alias
-            android:name=".presentation.CalculatorDisguiseAlias"
+            android:name=".CalculatorDisguiseAlias"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/calculator_disguise_name"
-            android:targetActivity=".presentation.MainActivity">
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity-alias>
 
+        <!-- FLUTTER V2 EMBEDDING META-DATA (CRITICAL FOR GRADLE BUILD) -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
         <!-- 0-MS ZERO-DELAY APPLOCK ACCESSIBILITY SERVICE -->
         <service
-            android:name=".service.lock.AppLockAccessibilityService"
+            android:name="uz.elbekweb.blackbox.service.lock.AppLockAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>
@@ -110,7 +119,7 @@
 
         <!-- NOTIFICATION SHIELD: Qulflangan ilovalar xabarlarini yashirish -->
         <service
-            android:name=".service.notification.NotificationShieldService"
+            android:name="uz.elbekweb.blackbox.service.notification.NotificationShieldService"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
             <intent-filter>
@@ -120,7 +129,7 @@
 
         <!-- DEVICE ADMIN: Uninstall Protection va o'chirishni bloklash -->
         <receiver
-            android:name=".service.receiver.BlackBoxDeviceAdminReceiver"
+            android:name="uz.elbekweb.blackbox.service.receiver.BlackBoxDeviceAdminReceiver"
             android:description="@string/device_admin_description"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
@@ -137,7 +146,7 @@
 
         <!-- BOOT COMPLETED: Qurilma yoqilganda barcha himoyani darhol ishga tushirish -->
         <receiver
-            android:name=".service.receiver.BootReceiver"
+            android:name="uz.elbekweb.blackbox.service.receiver.BootReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

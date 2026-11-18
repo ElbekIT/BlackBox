@@ -1,10 +1,10 @@
 package uz.elbekweb.blackbox
 
-import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import io.flutter.app.FlutterApplication
 import uz.elbekweb.blackbox.core.crypto.KeyStoreManager
 import uz.elbekweb.blackbox.data.preference.BlackBoxPreferences
 
@@ -13,7 +13,7 @@ import uz.elbekweb.blackbox.data.preference.BlackBoxPreferences
  * 100% Oflayn kiber-xavfsizlik va shaxsiy maxfiylik ilovasi.
  * Muallif: Elbek Web (@elbekdesign_va_webdasturchi_uz)
  */
-class BlackBoxApp : Application() {
+class BlackBoxApp : FlutterApplication() {
 
     companion object {
         const val CHANNEL_SECURITY_ID = "blackbox_security_alerts"
