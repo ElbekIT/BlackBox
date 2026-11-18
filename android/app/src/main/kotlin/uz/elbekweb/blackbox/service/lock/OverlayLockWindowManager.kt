@@ -9,22 +9,24 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.GridLayout
-import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
-import android.widget.Toast
+import uz.elbekweb.blackbox.core.util.ScreenUtils
 import uz.elbekweb.blackbox.data.preference.BlackBoxPreferences
 import java.util.Calendar
 
 /**
- * 0-Millisekundli WindowManager Overlay Qulf Oynasi.
- * TYPE_ACCESSIBILITY_OVERLAY yoki TYPE_APPLICATION_OVERLAY orqali
- * tizim ustidan darhol xavfsizlik interfeysini chizadi.
+ * 0-Millisekundli Universal Responsive WindowManager Overlay Qulf Oynasi.
+ * Har qanday ekran o'lchami (4-dyuymdan planshetlargacha, Foldable va Landscape)
+ * uchun to'liq moslashadi. Hech qanday ekranda elementlar qirqilmaydi va oqib ketmaydi.
  * FLAG_SECURE: skrinshot va ekran yozishdan to'liq himoyalangan.
  */
 class OverlayLockWindowManager(private val context: Context) {
@@ -34,13 +36,11 @@ class OverlayLockWindowManager(private val context: Context) {
     private var currentLockedPackage: String? = null
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    // Kiritilgan PIN va Yozish dinamikasi (Keystroke dynamics)
     private val enteredPin = StringBuilder()
     private val keyPressTimestamps = mutableListOf<Long>()
     private var pinDotsView: LinearLayout? = null
     private var failedAttempts = 0
 
-    // Vaqtinchalik ochilgan ilovalar ro'yxati (ekran o'chguncha)
     companion object {
         val temporarilyUnlockedPackages = mutableSetOf<String>()
     }
@@ -50,7 +50,7 @@ class OverlayLockWindowManager(private val context: Context) {
      */
     @SuppressLint("ClickableViewAccessibility")
     fun showOverlay(packageName: String) {
-        if (overlayView != null) return // Allaqachon ko'rinib turibdi
+        if (overlayView != null) return
         if (temporarilyUnlockedPackages.contains(packageName)) return
 
         currentLockedPackage = packageName
@@ -58,7 +58,6 @@ class OverlayLockWindowManager(private val context: Context) {
         keyPressTimestamps.clear()
 
         mainHandler.post {
-            // Agar ilova uchun "Soxta Xatolik" (Fake Crash) rejimi yoqilgan bo'lsa
             if (BlackBoxPreferences.isFakeCrashPackage(packageName)) {
                 showFakeCrashOverlay(packageName)
                 return@post
@@ -83,9 +82,13 @@ class OverlayLockWindowManager(private val context: Context) {
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.CENTER
+                // Zamonaviy ekran tirqishlari (Notch/Punch-hole) bilan to'g'ri ishlash
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                }
             }
 
-            val lockView = createCyberLockUi()
+            val lockView = createUniversalCyberLockUi()
             overlayView = lockView
 
             try {
@@ -116,51 +119,85 @@ class OverlayLockWindowManager(private val context: Context) {
     }
 
     /**
-     * Sof kod orqali tezkor AMOLED Cyber Lock UI yaratish (0ms overhead)
+     * Har qanday ekran o'lchami va orientatsiyada (Landscape / Portrait / Tablet / Foldable)
+     * mukammal moslashuvchi (Responsive) AMOLED Cyber Lock UI
      */
-    private fun createCyberLockUi(): View {
-        val root = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
+    private fun createUniversalCyberLockUi(): View {
+        val isLandscape = ScreenUtils.isLandscape(context)
+        val isTablet = ScreenUtils.isTablet(context)
+        val btnSize = ScreenUtils.calculateKeypadButtonSize(context)
+
+        // 1. Tashqi ScrollView - balandlik yetmay qolsa (masalan, yotiq rejimda) ekran aylanishi uchun
+        val scrollView = ScrollView(context).apply {
             setBackgroundColor(Color.parseColor("#000000")) // Pure AMOLED Black
-            gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(48, 80, 48, 48)
+            isFillViewport = true
+            overScrollMode = View.OVER_SCROLL_NEVER
         }
 
-        // Qulf Ikonkasi va Kiber Sarlavha
+        // 2. Markazlashtiruvchi tashqi konteyner
+        val outerContainer = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            val horizPadding = if (isTablet) ScreenUtils.dp(context, 48) else ScreenUtils.dp(context, 16)
+            val vertPadding = ScreenUtils.dp(context, 24)
+            setPadding(horizPadding, vertPadding, horizPadding, vertPadding)
+        }
+        scrollView.addView(outerContainer)
+
+        // 3. Markaziy karta (Planshetlarda ulkan bo'lib ketmasligi uchun maksimal kenglik chegaralangan)
+        val centerCard = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            val maxCardWidth = if (isTablet) ScreenUtils.dp(context, 460) else ViewGroup.LayoutParams.MATCH_PARENT
+            layoutParams = LinearLayout.LayoutParams(maxCardWidth, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+        }
+        outerContainer.addView(centerCard)
+
+        // Sarlavha
         val titleView = TextView(context).apply {
             text = "BLACKBOX // CYBER VAULT"
             setTextColor(Color.parseColor("#00FF66")) // Cyber Green
-            textSize = 20f
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, if (isLandscape) 16f else 20f)
             typeface = Typeface.MONOSPACE
             gravity = Gravity.CENTER
-            setPadding(0, 40, 0, 16)
+            setPadding(0, ScreenUtils.dp(context, 8), 0, ScreenUtils.dp(context, 4))
         }
-        root.addView(titleView)
+        centerCard.addView(titleView)
 
+        // Qulflangan ilova nomi
         val subTitle = TextView(context).apply {
-            text = "QULFLANGAN ILOVA: [${currentLockedPackage ?: "SYSTEM"}]"
+            text = "QULFLANGAN: [${currentLockedPackage ?: "SYSTEM"}]"
             setTextColor(Color.parseColor("#00E5FF")) // Neon Blue
-            textSize = 12f
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, if (isLandscape) 10f else 12f)
             typeface = Typeface.MONOSPACE
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 40)
+            setPadding(0, 0, 0, ScreenUtils.dp(context, if (isLandscape) 12 else 24))
         }
-        root.addView(subTitle)
+        centerCard.addView(subTitle)
 
-        // PIN Nuqtalari ko'rsatgichi
+        // PIN Nuqtalari (Dots)
         pinDotsView = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, 20, 0, 40)
+            setPadding(0, 0, 0, ScreenUtils.dp(context, if (isLandscape) 12 else 28))
         }
         updatePinDots()
-        root.addView(pinDotsView)
+        centerCard.addView(pinDotsView)
 
-        // Raqamlar Klaviaturasi (Grid 3x4)
+        // Raqamlar Klaviaturasi (3x4 Grid)
         val keypadGrid = GridLayout(context).apply {
             columnCount = 3
             rowCount = 4
             alignmentMode = GridLayout.ALIGN_BOUNDS
+            val gridParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+            layoutParams = gridParams
         }
 
         val buttons = listOf(
@@ -170,25 +207,27 @@ class OverlayLockWindowManager(private val context: Context) {
             "C", "0", "⌫"
         )
 
+        val margin = ScreenUtils.dp(context, if (isLandscape) 6 else 10)
+        val cornerRadius = btnSize / 2f // Tugma to'liq yumaloq kiber shaklga keladi
+
         for (label in buttons) {
             val btn = Button(context).apply {
                 text = label
-                textSize = 22f
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, if (btnSize < ScreenUtils.dp(context, 60)) 18f else 22f)
                 typeface = Typeface.MONOSPACE
                 setTextColor(Color.parseColor("#E6EDF3"))
 
-                // Kiber tugma stili
                 val bg = GradientDrawable().apply {
                     setColor(Color.parseColor("#0D1117"))
-                    setStroke(2, Color.parseColor("#1F3327"))
-                    cornerRadius = 60f
+                    setStroke(ScreenUtils.dp(context, 1), Color.parseColor("#1F3327"))
+                    this.cornerRadius = cornerRadius
                 }
                 background = bg
 
                 val params = GridLayout.LayoutParams().apply {
-                    width = 200
-                    height = 200
-                    setMargins(16, 16, 16, 16)
+                    width = btnSize
+                    height = btnSize
+                    setMargins(margin, margin, margin, margin)
                 }
                 layoutParams = params
 
@@ -199,8 +238,8 @@ class OverlayLockWindowManager(private val context: Context) {
             keypadGrid.addView(btn)
         }
 
-        root.addView(keypadGrid)
-        return root
+        centerCard.addView(keypadGrid)
+        return scrollView
     }
 
     private fun onKeyClicked(label: String) {
@@ -233,20 +272,22 @@ class OverlayLockWindowManager(private val context: Context) {
     private fun updatePinDots() {
         pinDotsView?.removeAllViews()
         val count = maxOf(4, enteredPin.length)
+        val dotSize = ScreenUtils.dp(context, 14)
+        val dotMargin = ScreenUtils.dp(context, 8)
+
         for (i in 0 until count) {
             val dot = View(context).apply {
-                val size = 28
-                val params = LinearLayout.LayoutParams(size, size).apply {
-                    setMargins(12, 0, 12, 0)
+                val params = LinearLayout.LayoutParams(dotSize, dotSize).apply {
+                    setMargins(dotMargin, 0, dotMargin, 0)
                 }
                 layoutParams = params
                 val drawable = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
                     if (i < enteredPin.length) {
-                        setColor(Color.parseColor("#00FF66")) // To'ldirilgan (Neon Yashil)
+                        setColor(Color.parseColor("#00FF66")) // Neon Yashil
                     } else {
-                        setColor(Color.parseColor("#21262D")) // Bo'sh
-                        setStroke(2, Color.parseColor("#30363D"))
+                        setColor(Color.parseColor("#21262D"))
+                        setStroke(ScreenUtils.dp(context, 1), Color.parseColor("#30363D"))
                     }
                 }
                 background = drawable
@@ -255,14 +296,10 @@ class OverlayLockWindowManager(private val context: Context) {
         }
     }
 
-    /**
-     * PIN tekshiruvi: Master PIN, Decoy PIN va Time-PIN
-     */
     private fun checkEnteredPin() {
         val pin = enteredPin.toString()
         if (pin.length < 4) return
 
-        // 1. Time-PIN tekshiruvi (agar yoqilgan bo'lsa, joriy soat-daqiqa HHmm masalan: 1425)
         if (BlackBoxPreferences.isTimePinEnabled) {
             val calendar = Calendar.getInstance()
             val timePin = String.format("%02d%02d", calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE))
@@ -272,34 +309,25 @@ class OverlayLockWindowManager(private val context: Context) {
             }
         }
 
-        // 2. Master PIN tekshiruvi
         if (BlackBoxPreferences.checkMasterPin(pin)) {
             onUnlockSuccess()
             return
         }
 
-        // 3. Decoy (Mehmon) PIN tekshiruvi
         if (BlackBoxPreferences.checkDecoyPin(pin)) {
             onUnlockSuccess(isDecoy = true)
             return
         }
 
-        // 4. Xato parol holati
         if (pin.length >= 4 && (pin.length == 6 || pin.length == 8 || pin.length == 4)) {
             failedAttempts++
             pinDotsView?.let { view ->
-                // Qizil qilib miltillatish
                 view.setBackgroundColor(Color.parseColor("#44FF0055"))
                 mainHandler.postDelayed({
                     view.setBackgroundColor(Color.TRANSPARENT)
                     enteredPin.clear()
                     updatePinDots()
                 }, 300)
-            }
-
-            if (failedAttempts >= 2 && BlackBoxPreferences.isIntruderSelfieEnabled) {
-                // Intruder Selfie olish mexanizmini ishga tushirish
-                triggerIntruderCapture()
             }
         }
     }
@@ -312,14 +340,12 @@ class OverlayLockWindowManager(private val context: Context) {
         hideOverlay()
     }
 
-    private fun triggerIntruderCapture() {
-        // Old kamera orqali maxfiy suratga olish vazifasi
-    }
-
     /**
-     * Soxta "Dastur to'xtatildi" xatolik oynasi (Fake Crash)
+     * Universal Responsive Soxta Xatolik (Fake Crash) oynasi
      */
     private fun showFakeCrashOverlay(packageName: String) {
+        val isTablet = ScreenUtils.isTablet(context)
+
         val layoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
@@ -338,17 +364,25 @@ class OverlayLockWindowManager(private val context: Context) {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.parseColor("#CC000000"))
             gravity = Gravity.CENTER
-            setPadding(60, 60, 60, 60)
+            val p = ScreenUtils.dp(context, 24)
+            setPadding(p, p, p, p)
 
+            val maxCardWidth = if (isTablet) ScreenUtils.dp(context, 420) else ViewGroup.LayoutParams.MATCH_PARENT
             val card = LinearLayout(context).apply {
                 orientation = LinearLayout.VERTICAL
-                setBackgroundColor(Color.parseColor("#1E1E1E"))
-                setPadding(40, 40, 40, 30)
+                val cardBg = GradientDrawable().apply {
+                    setColor(Color.parseColor("#1E1E1E"))
+                    cornerRadius = ScreenUtils.dp(context, 16).toFloat()
+                }
+                background = cardBg
+                val cp = ScreenUtils.dp(context, 24)
+                setPadding(cp, cp, cp, ScreenUtils.dp(context, 16))
+                layoutParams = LinearLayout.LayoutParams(maxCardWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
 
                 val msg = TextView(context).apply {
                     text = "Afsuski, dastur to'xtatildi."
                     setTextColor(Color.WHITE)
-                    textSize = 18f
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
                 }
                 addView(msg)
 
@@ -359,7 +393,6 @@ class OverlayLockWindowManager(private val context: Context) {
                     gravity = Gravity.END
                     setOnClickListener {
                         hideOverlay()
-                        // Bosh ekranga (Home) chiqarib yuborish
                     }
                 }
                 addView(okBtn)

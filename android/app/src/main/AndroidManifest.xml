@@ -43,6 +43,18 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- ======================================================== -->
+    <!-- BARCHA EKRAN VA QURILMALARNI QO'LLAB-QUVVATLASH            -->
+    <!-- (4" dan 12" gacha, Foldable, Tablet va barcha zichliklar) -->
+    <!-- ======================================================== -->
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true"
+        android:anyDensity="true"
+        android:resizeable="true" />
+
     <application
         android:name=".BlackBoxApp"
         android:allowBackup="false"
@@ -61,7 +73,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|screenSize">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|density|uiMode">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
