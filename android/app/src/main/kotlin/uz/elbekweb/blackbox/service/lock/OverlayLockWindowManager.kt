@@ -63,7 +63,7 @@ class OverlayLockWindowManager(private val context: Context) {
                 return@post
             }
 
-            val layoutParams = WindowManager.LayoutParams(
+            val windowParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -92,7 +92,7 @@ class OverlayLockWindowManager(private val context: Context) {
             overlayView = lockView
 
             try {
-                windowManager.addView(lockView, layoutParams)
+                windowManager.addView(lockView, windowParams)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -149,7 +149,7 @@ class OverlayLockWindowManager(private val context: Context) {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             val maxCardWidth = if (isTablet) ScreenUtils.dp(context, 460) else ViewGroup.LayoutParams.MATCH_PARENT
-            layoutParams = LinearLayout.LayoutParams(maxCardWidth, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
+            this.layoutParams = LinearLayout.LayoutParams(maxCardWidth, ViewGroup.LayoutParams.WRAP_CONTENT).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
             }
         }
@@ -197,7 +197,7 @@ class OverlayLockWindowManager(private val context: Context) {
             ).apply {
                 gravity = Gravity.CENTER_HORIZONTAL
             }
-            layoutParams = gridParams
+            this.layoutParams = gridParams
         }
 
         val buttons = listOf(
@@ -346,7 +346,7 @@ class OverlayLockWindowManager(private val context: Context) {
     private fun showFakeCrashOverlay(packageName: String) {
         val isTablet = ScreenUtils.isTablet(context)
 
-        val layoutParams = WindowManager.LayoutParams(
+        val windowParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
@@ -377,7 +377,7 @@ class OverlayLockWindowManager(private val context: Context) {
                 background = cardBg
                 val cp = ScreenUtils.dp(context, 24)
                 setPadding(cp, cp, cp, ScreenUtils.dp(context, 16))
-                layoutParams = LinearLayout.LayoutParams(maxCardWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
+                this.layoutParams = LinearLayout.LayoutParams(maxCardWidth, ViewGroup.LayoutParams.WRAP_CONTENT)
 
                 val msg = TextView(context).apply {
                     text = "Afsuski, dastur to'xtatildi."
@@ -402,7 +402,7 @@ class OverlayLockWindowManager(private val context: Context) {
 
         overlayView = crashLayout
         try {
-            windowManager.addView(crashLayout, layoutParams)
+            windowManager.addView(crashLayout, windowParams)
         } catch (e: Exception) {
             e.printStackTrace()
         }
