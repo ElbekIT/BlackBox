@@ -25,6 +25,7 @@ workflows:
           EOF
       - name: Get dependencies
         script: |
+          flutter clean
           flutter packages pub get
       - name: Build Android App Bundle and APK
         script: |

@@ -5,10 +5,12 @@ allprojects {
     }
 }
 
-rootProject.layout.buildDirectory.value(rootProject.layout.buildDirectory.dir("../build").get())
+rootProject.layout.buildDirectory.set(file("../build"))
+
 subprojects {
-    project.layout.buildDirectory.value(rootProject.layout.buildDirectory.dir(project.name).get())
+    project.layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
