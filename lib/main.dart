@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/calculator_screen.dart';
+import 'screens/blackbox_home_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,23 +16,29 @@ void main() {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
-  runApp(const AlgorixApp());
+  runApp(const BlackBoxApp());
 }
 
-class AlgorixApp extends StatelessWidget {
-  const AlgorixApp({super.key});
+class BlackBoxApp extends StatelessWidget {
+  const BlackBoxApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ALGORIX',
+      title: 'BlackBox',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF000000),
-        fontFamily: 'Roboto',
+        primaryColor: const Color(0xFF00FF66),
+        fontFamily: 'monospace',
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF00FF66),
+          secondary: Color(0xFF00E5FF),
+          surface: Color(0xFF0D1117),
+        ),
       ),
-      home: const CalculatorScreen(),
+      home: const BlackBoxHomeScreen(),
     );
   }
 }

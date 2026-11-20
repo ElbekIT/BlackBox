@@ -55,6 +55,14 @@
         android:anyDensity="true"
         android:resizeable="true" />
 
+    <!-- Query installed applications for AppLock on Android 11+ (API 30+) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:name="uz.elbekweb.blackbox.BlackBoxApp"
         android:allowBackup="false"
