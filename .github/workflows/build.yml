@@ -1,0 +1,98 @@
+name: Build BlackBox APK & AAB
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android Release (APK & AAB)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Verify Keystore & key.properties
+        run: |
+          mkdir -p android/app
+          cp android/upload-keystore.jks android/app/upload-keystore.jks || true
+          cat << 'EOF' > android/key.properties
+          storePassword=AlgorixSecurePass2026!
+          keyPassword=AlgorixSecurePass2026!
+          keyAlias=algorix-upload
+          storeFile=upload-keystore.jks
+          EOF
+          cp android/key.properties android/app/key.properties || true
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build APK (Direct Install)
+        run: flutter build apk --release --android-skip-build-dependency-validation
+
+      - name: Build App Bundle (Google Play Store)
+        run: flutter build appbundle --release --android-skip-build-dependency-validation
+
+      - name: Prepare Distribution Directory
+        run: |
+          mkdir -p dist
+          find build/ -name "*.apk" -type f -exec cp {} dist/BlackBox-v1.0.0-release.apk \;
+          find build/ -name "*.aab" -type f -exec cp {} dist/BlackBox-v1.0.0-release.aab \;
+          echo "=== Exported artifacts ==="
+          ls -lh dist/
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BlackBox-Release-APK
+          path: dist/BlackBox-v1.0.0-release.apk
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BlackBox-Release-AAB
+          path: dist/BlackBox-v1.0.0-release.aab
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: release-build-${{ github.run_number }}
+          name: BlackBox v1.0.0 (Build #${{ github.run_number }})
+          body: |
+            ## 🛡️ BlackBox — №1 Zero-Delay Cyber Privacy & AppLock Suite
+            **Muallif:** Elbek Web (@elbekdesign_va_webdasturchi_uz)
+            
+            ### 📦 Yuklab olish uchun rasmiy fayllar:
+            * **BlackBox-v1.0.0-release.apk** — Telefonga to'g'ridan-to'g'ri o'rnatish uchun APK.
+            * **BlackBox-v1.0.0-release.aab** — Google Play Console'ga yuklash uchun AAB.
+            
+            ### 🔒 Xavfsizlik xususiyatlari:
+            * 100% Oflayn Air-Gapped (Zero-Internet)
+            * 0-ms Native AppLock
+            * Hardware Keystore AES-256
+            * Anti-Theft Signallari
+          files: |
+            dist/BlackBox-v1.0.0-release.apk
+            dist/BlackBox-v1.0.0-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
